@@ -1,23 +1,28 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import ContinueButton from '../components/ContinueButton';
+import { BORDER_RADIUS, COLORS, SHADOWS, SPACING } from '../utils/constants';
+import { validateName } from '../utils/validation';
 
 export default function HomeScreen() {
   const [userName, setUserName] = useState('');
   const router = useRouter();
 
   const handleContinue = () => {
-    if (userName.trim().length < 2) {
-      Alert.alert('Error', 'Please enter your name (minimum 2 characters)');
+    const validation = validateName(userName);
+    if (!validation.isValid) {
+      Alert.alert('Error', validation.message);
       return;
     }
     
-    // Navigate to the food screen with the user's name
     router.push({
-      pathname: '/(tabs)/recipes',
+      pathname: '/(tabs)/profile',
       params: { userName: userName.trim() }
     });
   };
+
+  const isContinueDisabled = userName.trim().length < 2;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -27,7 +32,6 @@ export default function HomeScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
-            {/* Clean header with subtle color accents */}
             <View style={styles.header}>
               <View style={styles.logoContainer}>
                 <Text style={styles.logoText}>ReciPeels</Text>
@@ -38,7 +42,6 @@ export default function HomeScreen() {
               </Text>
             </View>
 
-            {/* Minimal card design with color accents */}
             <View style={styles.cardContainer}>
               <View style={styles.mainCard}>
                 <View style={styles.cardHeader}>
@@ -56,7 +59,7 @@ export default function HomeScreen() {
                   <TextInput
                     style={styles.textInput}
                     placeholder="e.g., Sarah, John, Emma..."
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={COLORS.text.placeholder}
                     value={userName}
                     onChangeText={setUserName}
                     autoFocus={true}
@@ -65,27 +68,36 @@ export default function HomeScreen() {
                   />
                 </View>
               </View>
+
+              <View style={styles.socialLoginContainer}>
+                <Text style={styles.socialLoginText}>Or sign up with</Text>
+                <View style={styles.socialIconsContainer}>
+                  <TouchableOpacity style={styles.socialIconWrapper}>
+                    <Image source={require('../../assets/images/google-logo.png')} style={styles.socialIcon} />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.socialIconWrapper}>
+                    <Image source={require('../../assets/images/instagram-logo.png')} style={styles.socialIcon} />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.socialIconWrapper}>
+                    <Image source={require('../../assets/images/facebook-logo.png')} style={styles.socialIcon} />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.socialIconWrapper}>
+                    <Image source={require('../../assets/images/x-logo.png')} style={styles.socialIcon} />
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
 
-            {/* Spacer for bottom button */}
             <View style={styles.spacer} />
           </View>
         </ScrollView>
 
-        {/* Bottom button container */}
         <View style={styles.bottomContainer}>
-          <TouchableOpacity
-            style={[
-              styles.continueButton,
-              userName.trim().length >= 2 ? styles.continueButtonActive : styles.continueButtonDisabled
-            ]}
+          <ContinueButton
             onPress={handleContinue}
-            disabled={userName.trim().length < 2}
-          >
-            <Text style={styles.continueButtonText}>
-              Get Started
-            </Text>
-          </TouchableOpacity>
+            disabled={isContinueDisabled}
+            text="Get Started"
+          />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -95,46 +107,46 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: COLORS.background,
   },
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: COLORS.background,
   },
   scrollContainer: {
     flexGrow: 1,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.md,
   },
   header: {
     alignItems: 'center',
     marginBottom: 60,
-    marginTop: 40,
+    marginTop: SPACING.xl,
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: SPACING.md,
   },
   logoText: {
     fontSize: 36,
     fontWeight: '300',
-    color: '#374151',
+    color: COLORS.text.primary,
     textAlign: 'center',
     letterSpacing: -0.5,
-    marginBottom: 8,
+    marginBottom: SPACING.sm,
   },
   logoAccent: {
     width: 40,
     height: 3,
-    backgroundColor: '#FFB74D',
+    backgroundColor: COLORS.primary,
     borderRadius: 2,
   },
   tagline: {
     fontSize: 16,
-    color: '#6B7280',
+    color: COLORS.text.secondary,
     textAlign: 'center',
     lineHeight: 22,
     fontWeight: '400',
@@ -145,62 +157,87 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   mainCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 32,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
+    backgroundColor: COLORS.white,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.xl,
+    ...SHADOWS.md,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: COLORS.border,
   },
   cardHeader: {
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: SPACING.sm,
   },
   welcomeTitle: {
     fontSize: 24,
     fontWeight: '500',
-    color: '#374151',
+    color: COLORS.text.primary,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: SPACING.sm,
   },
   titleAccent: {
     width: 24,
     height: 2,
-    backgroundColor: '#A7F3D0',
+    backgroundColor: COLORS.secondary,
     borderRadius: 1,
   },
   welcomeSubtitle: {
-    color: '#6B7280',
+    color: COLORS.text.secondary,
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: SPACING.xl,
     fontSize: 15,
     lineHeight: 20,
     fontWeight: '400',
   },
   inputSection: {
-    marginBottom: 24,
+    marginBottom: SPACING.lg,
   },
   inputLabel: {
-    color: '#374151',
+    color: COLORS.text.primary,
     fontWeight: '500',
-    marginBottom: 8,
+    marginBottom: SPACING.sm,
     fontSize: 14,
   },
   textInput: {
     width: '100%',
     height: 52,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: COLORS.input.background,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    paddingHorizontal: 16,
+    borderColor: COLORS.input.border,
+    borderRadius: BORDER_RADIUS.md,
+    paddingHorizontal: SPACING.md,
     fontSize: 16,
-    color: '#374151',
+    color: COLORS.text.primary,
     fontWeight: '400',
+  },
+  socialLoginContainer: {
+    alignItems: 'center',
+    marginTop: SPACING.xl,
+  },
+  socialLoginText: {
+    color: COLORS.text.secondary,
+    marginBottom: SPACING.md,
+    fontSize: 14,
+  },
+  socialIconsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 20,
+  },
+  socialIconWrapper: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: COLORS.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...SHADOWS.sm,
+  },
+  socialIcon: {
+    width: 24,
+    height: 24,
   },
   spacer: {
     height: 100,
@@ -210,35 +247,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FAFAFA',
-    paddingHorizontal: 24,
+    backgroundColor: COLORS.background,
+    paddingHorizontal: SPACING.lg,
     paddingBottom: 34,
-    paddingTop: 20,
+    paddingTop: SPACING.md,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
-  },
-  continueButton: {
-    width: '100%',
-    height: 56,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#FFB74D',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  continueButtonActive: {
-    backgroundColor: '#FFB74D',
-  },
-  continueButtonDisabled: {
-    backgroundColor: '#F3F4F6',
-  },
-  continueButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    letterSpacing: 0.3,
+    borderTopColor: COLORS.border,
   },
 }); 
