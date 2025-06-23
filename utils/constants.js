@@ -76,11 +76,4 @@ export const SHADOWS = {
     shadowRadius: 8,
     elevation: 4,
   },
-};
-
-export const VALIDATION = {
-  MIN_NAME_LENGTH: 2,
-  MIN_INGREDIENT_LENGTH: 2,
-  MIN_INGREDIENTS: 3,
-  MAX_INGREDIENTS: 10,
 }; 

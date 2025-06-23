@@ -1,68 +1,77 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { BORDER_RADIUS, COLORS, SHADOWS, SPACING } from '../../utils';
 import ContinueButton from '../components/ContinueButton';
 import Header from '../components/Header';
-import { BORDER_RADIUS, COLORS, SHADOWS, SPACING, VALIDATION } from '../utils/constants';
-import { getCounterStatus, validateIngredient, validateIngredientCount } from '../utils/validation';
 
-export default function PerfilScreen() {
-  const [foods, setFoods] = useState([]);
-  const [newFood, setNewFood] = useState('');
-  const { userName } = useLocalSearchParams();
+const MIN_INGREDIENTS = 3;
+const MAX_INGREDIENTS = 10;
+const MIN_LENGTH = 3;
+
+const Profile = () => {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const { userName } = params;
 
-  const addFood = () => {
-    const validation = validateIngredient(newFood, foods);
-    if (!validation.isValid) {
-      Alert.alert('Error', validation.message);
-      return;
-    }
+  const [ingredient, setIngredient] = useState('');
+  const [ingredients, setIngredients] = useState([]);
 
-    const countValidation = validateIngredientCount(foods.length + 1);
-    if (!countValidation.isValid) {
-      Alert.alert('Maximum Ingredients Reached', countValidation.message);
-      return;
-    }
-
-    setFoods([...foods, newFood.trim()]);
-    setNewFood('');
+  const getCounterColor = () => {
+    if (ingredients.length < MIN_INGREDIENTS) return COLORS.status.error.text;
+    if (ingredients.length >= MIN_INGREDIENTS && ingredients.length <= MAX_INGREDIENTS) return COLORS.status.success.text;
+    return COLORS.status.error.text;
   };
 
-  const removeFood = (index) => {
-    setFoods(foods.filter((_, i) => i !== index));
+  const handleAddIngredient = () => {
+    const trimmedIngredient = ingredient.trim().toLowerCase();
+    if (trimmedIngredient.length < MIN_LENGTH) {
+      Alert.alert('Too short!', `Ingredients must be at least ${MIN_LENGTH} characters long.`);
+      return;
+    }
+    if (ingredients.includes(trimmedIngredient)) {
+      Alert.alert('Already added!', 'You have already added this ingredient.');
+      return;
+    }
+    if (ingredients.length >= MAX_INGREDIENTS) {
+      Alert.alert('Limit reached!', `You can only add up to ${MAX_INGREDIENTS} ingredients.`);
+      return;
+    }
+    setIngredients([...ingredients, trimmedIngredient]);
+    setIngredient('');
+  };
+
+  const handleRemoveIngredient = (index) => {
+    const newIngredients = [...ingredients];
+    newIngredients.splice(index, 1);
+    setIngredients(newIngredients);
   };
 
   const handleContinue = () => {
-    const validation = validateIngredientCount(foods.length);
-    if (!validation.isValid) {
-      Alert.alert('Error', validation.message);
+    if (ingredients.length < MIN_INGREDIENTS) {
+      Alert.alert('Add more!', `Please add at least ${MIN_INGREDIENTS} ingredients to find recipes.`);
       return;
     }
-    
-    Alert.alert(
-      'Perfect! 🎉', 
-      `Hello ${userName}, with these ${foods.length} ingredients we can create amazing recipes:\n\n${foods.join(', ')}`,
-      [
-        { text: 'Continue', onPress: () => console.log('Continue to recipes') }
-      ]
-    );
+    router.push({
+      pathname: '/(tabs)/recipes',
+      params: { ingredients: ingredients.join(','), userName },
+    });
   };
 
   const handleGoBack = () => {
     router.back();
   };
 
-  const renderFoodItem = ({ item, index }) => (
-    <View style={styles.foodItem}>
-      <View style={styles.foodItemContent}>
-        <View style={styles.foodNumber}>
-          <Text style={styles.foodNumberText}>{index + 1}</Text>
+  const renderIngredientItem = ({ item, index }) => (
+    <View style={styles.ingredientItem}>
+      <View style={styles.ingredientItemContent}>
+        <View style={styles.ingredientNumber}>
+          <Text style={styles.ingredientNumberText}>{index + 1}</Text>
         </View>
-        <Text style={styles.foodText}>{item}</Text>
+        <Text style={styles.ingredientText}>{item}</Text>
       </View>
       <TouchableOpacity
-        onPress={() => removeFood(index)}
+        onPress={() => handleRemoveIngredient(index)}
         style={styles.removeButton}
       >
         <Text style={styles.removeButtonText}>×</Text>
@@ -70,10 +79,9 @@ export default function PerfilScreen() {
     </View>
   );
 
-  const counterStatus = getCounterStatus(foods.length);
-  const isContinueDisabled = foods.length < VALIDATION.MIN_INGREDIENTS;
-  const isMaxIngredients = foods.length >= VALIDATION.MAX_INGREDIENTS;
-  const canAddMore = newFood.trim().length >= VALIDATION.MIN_INGREDIENT_LENGTH && !isMaxIngredients;
+  const isContinueDisabled = ingredients.length < MIN_INGREDIENTS;
+  const isMaxIngredients = ingredients.length >= MAX_INGREDIENTS;
+  const canAddMore = ingredient.trim().length >= MIN_LENGTH && !isMaxIngredients;
 
   return (
     <View style={styles.container}>
@@ -87,7 +95,7 @@ export default function PerfilScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardContainer}
         >
-          <Header onBackPress={handleGoBack} />
+          <Header showBackButton />
 
           <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
@@ -107,34 +115,30 @@ export default function PerfilScreen() {
                 <Text style={styles.counterLabel}>
                   Added Ingredients
                 </Text>
-                <View style={[
-                  styles.counterBadge,
-                  styles[`counterBadge${counterStatus.type.charAt(0).toUpperCase() + counterStatus.type.slice(1)}`]
-                ]}>
-                  <Text style={[
-                    styles.counterText,
-                    styles[`counterText${counterStatus.type.charAt(0).toUpperCase() + counterStatus.type.slice(1)}`]
-                  ]}>
-                    {counterStatus.text}
+                <View style={styles.counterBadge}>
+                  <Text style={[styles.counterText, { color: getCounterColor() }]}>
+                    {ingredients.length} / {MAX_INGREDIENTS}
                   </Text>
                 </View>
               </View>
-              <Text style={[
-                styles.counterHint,
-                styles[`counterHint${counterStatus.type.charAt(0).toUpperCase() + counterStatus.type.slice(1)}`]
-              ]}>
-                {counterStatus.hint}
+              <Text style={styles.counterHint}>
+                {ingredients.length < MIN_INGREDIENTS 
+                  ? `You need to add at least ${MIN_INGREDIENTS} ingredients to continue`
+                  : ingredients.length >= MAX_INGREDIENTS
+                  ? 'Maximum ingredients reached'
+                  : 'You can add more ingredients or continue'
+                }
               </Text>
             </View>
 
-            {foods.length > 0 && (
-              <View style={styles.foodsSection}>
-                <Text style={styles.foodsSectionTitle}>
+            {ingredients.length > 0 && (
+              <View style={styles.ingredientsSection}>
+                <Text style={styles.ingredientsSectionTitle}>
                   Your ingredients:
                 </Text>
                 <FlatList
-                  data={foods}
-                  renderItem={renderFoodItem}
+                  data={ingredients}
+                  renderItem={renderIngredientItem}
                   keyExtractor={(item, index) => index.toString()}
                   scrollEnabled={false}
                 />
@@ -152,16 +156,16 @@ export default function PerfilScreen() {
               <View style={styles.inputRow}>
                 <TextInput
                   style={[
-                    styles.foodInput,
-                    isMaxIngredients && styles.foodInputDisabled
+                    styles.ingredientInput,
+                    isMaxIngredients && styles.ingredientInputDisabled
                   ]}
                   placeholder={isMaxIngredients ? "Maximum ingredients reached" : "e.g., tomato, chicken, rice..."}
                   placeholderTextColor={COLORS.text.placeholder}
-                  value={newFood}
-                  onChangeText={setNewFood}
+                  value={ingredient}
+                  onChangeText={setIngredient}
                   autoCapitalize="words"
                   autoCorrect={false}
-                  onSubmitEditing={addFood}
+                  onSubmitEditing={handleAddIngredient}
                   returnKeyType="done"
                   editable={!isMaxIngredients}
                 />
@@ -170,7 +174,7 @@ export default function PerfilScreen() {
                     styles.addButton,
                     canAddMore ? styles.addButtonActive : styles.addButtonDisabled
                   ]}
-                  onPress={addFood}
+                  onPress={handleAddIngredient}
                   disabled={!canAddMore}
                 >
                   <Text style={styles.addButtonText}>+</Text>
@@ -187,14 +191,14 @@ export default function PerfilScreen() {
 
             <View style={styles.spacer} />
           </ScrollView>
-
+          
           <View style={styles.bottomContainer}>
             <ContinueButton
               onPress={handleContinue}
               disabled={isContinueDisabled}
               text={isContinueDisabled 
-                ? `Add ${VALIDATION.MIN_INGREDIENTS - foods.length} more ingredient${VALIDATION.MIN_INGREDIENTS - foods.length !== 1 ? 's' : ''}`
-                : 'Find Recipes!'
+                ? `Add ${MIN_INGREDIENTS - ingredients.length} more ingredient${MIN_INGREDIENTS - ingredients.length !== 1 ? 's' : ''}`
+                : 'Find Recipes'
               }
             />
           </View>
@@ -202,7 +206,7 @@ export default function PerfilScreen() {
       </SafeAreaView>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -269,51 +273,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 16,
-  },
-  counterBadgeSuccess: {
-    backgroundColor: COLORS.status.success.background,
-  },
-  counterBadgeWarning: {
-    backgroundColor: COLORS.status.warning.background,
-  },
-  counterBadgeMax: {
-    backgroundColor: COLORS.status.max.background,
+    backgroundColor: COLORS.background,
   },
   counterText: {
     fontWeight: '600',
   },
-  counterTextSuccess: {
-    color: COLORS.status.success.text,
-  },
-  counterTextWarning: {
-    color: COLORS.status.warning.text,
-  },
-  counterTextMax: {
-    color: COLORS.status.max.text,
-  },
   counterHint: {
     fontSize: 14,
     marginTop: SPACING.sm,
+    color: COLORS.text.secondary,
   },
-  counterHintSuccess: {
-    color: COLORS.status.success.hint,
-  },
-  counterHintWarning: {
-    color: COLORS.status.warning.hint,
-  },
-  counterHintMax: {
-    color: COLORS.status.max.hint,
-  },
-  foodsSection: {
+  ingredientsSection: {
     marginBottom: SPACING.lg,
   },
-  foodsSectionTitle: {
+  ingredientsSectionTitle: {
     color: COLORS.text.primary,
     fontWeight: '500',
     fontSize: 16,
     marginBottom: 12,
   },
-  foodItem: {
+  ingredientItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -325,12 +304,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  foodItemContent: {
+  ingredientItemContent: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
-  foodNumber: {
+  ingredientNumber: {
     width: 28,
     height: 28,
     backgroundColor: COLORS.accent,
@@ -339,12 +318,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
   },
-  foodNumberText: {
+  ingredientNumberText: {
     color: COLORS.status.warning.text,
     fontWeight: '600',
     fontSize: 12,
   },
-  foodText: {
+  ingredientText: {
     color: COLORS.text.primary,
     fontWeight: '400',
     fontSize: 16,
@@ -391,7 +370,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: SPACING.md,
   },
-  foodInput: {
+  ingredientInput: {
     flex: 1,
     height: 52,
     backgroundColor: COLORS.input.background,
@@ -404,7 +383,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     marginRight: 12,
   },
-  foodInputDisabled: {
+  ingredientInputDisabled: {
     backgroundColor: COLORS.input.background,
     color: COLORS.text.placeholder,
   },
@@ -446,4 +425,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
   },
-}); 
+});
+
+export default Profile; 

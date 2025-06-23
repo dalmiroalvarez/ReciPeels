@@ -1,29 +1,40 @@
 import React from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { COLORS, SPACING } from '../../utils';
 import BackButton from './BackButton';
 
-export default function Header({ onBackPress }) {
+const Header = ({ title, showBackButton = false }) => {
   return (
-    <View style={styles.headerContainer}>
-      <BackButton onPress={onBackPress} />
-      <View style={styles.headerSpacer} />
-    </View>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.headerContainer}>
+        {showBackButton && <BackButton />}
+        <Text style={[styles.headerTitle, { marginLeft: showBackButton ? 0 : SPACING.md }]}>{title}</Text>
+      </View>
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
+  safeArea: {
+    backgroundColor: COLORS.background,
+  },
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingTop: Platform.OS === 'android' ? 44 : 16,
-    paddingBottom: 8,
+    justifyContent: 'flex-start',
+    height: Platform.OS === 'android' ? 70 : 60,
+    paddingTop: Platform.OS === 'android' ? SPACING.lg : 0,
+    paddingHorizontal: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-    backgroundColor: '#FAFAFA',
+    borderBottomColor: COLORS.border,
   },
-  headerSpacer: {
-    width: 32,
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: COLORS.text.primary,
+    textAlign: 'center',
+    flex: 1,
   },
-}); 
+});
+
+export default Header; 

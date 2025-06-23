@@ -1,28 +1,27 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { BORDER_RADIUS, COLORS, SHADOWS, SPACING } from '../../utils';
 import ContinueButton from '../components/ContinueButton';
-import { BORDER_RADIUS, COLORS, SHADOWS, SPACING } from '../utils/constants';
-import { validateName } from '../utils/validation';
 
-export default function HomeScreen() {
+const MIN_NAME_LENGTH = 3;
+
+const Home = () => {
   const [userName, setUserName] = useState('');
   const router = useRouter();
 
   const handleContinue = () => {
-    const validation = validateName(userName);
-    if (!validation.isValid) {
-      Alert.alert('Error', validation.message);
+    if (userName.trim().length < MIN_NAME_LENGTH) {
+      Alert.alert('Invalid Name', `Please enter a name with at least ${MIN_NAME_LENGTH} characters.`);
       return;
     }
-    
     router.push({
       pathname: '/(tabs)/profile',
-      params: { userName: userName.trim() }
+      params: { userName: userName.trim() },
     });
   };
 
-  const isContinueDisabled = userName.trim().length < 2;
+  const isContinueDisabled = userName.trim().length < MIN_NAME_LENGTH;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -53,7 +52,7 @@ export default function HomeScreen() {
                 <Text style={styles.welcomeSubtitle}>
                   Let's personalize your cooking experience
                 </Text>
-                
+
                 <View style={styles.inputSection}>
                   <Text style={styles.inputLabel}>Your Name</Text>
                   <TextInput
@@ -86,9 +85,9 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
-            </View>
 
-            <View style={styles.spacer} />
+              <View style={styles.spacer} />
+            </View>
           </View>
         </ScrollView>
 
@@ -102,7 +101,7 @@ export default function HomeScreen() {
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -119,7 +118,6 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.md,
   },
   header: {
     alignItems: 'center',
@@ -136,7 +134,6 @@ const styles = StyleSheet.create({
     color: COLORS.text.primary,
     textAlign: 'center',
     letterSpacing: -0.5,
-    marginBottom: SPACING.sm,
   },
   logoAccent: {
     width: 40,
@@ -254,4 +251,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
   },
-}); 
+});
+
+export default Home; 

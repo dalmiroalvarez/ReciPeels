@@ -1,49 +1,39 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { COLORS, SHADOWS } from '../utils/constants';
+import { BORDER_RADIUS, COLORS, SPACING } from '../../utils';
 
-export default function ContinueButton({ 
-  onPress, 
-  disabled, 
-  text, 
-  style 
-}) {
+const ContinueButton = ({ onPress, text = "Continue", disabled = false }) => {
   return (
     <TouchableOpacity
-      style={[
-        styles.continueButton,
-        disabled ? styles.continueButtonDisabled : styles.continueButtonActive,
-        style
-      ]}
       onPress={onPress}
+      style={[styles.button, disabled && styles.disabledButton]}
+      activeOpacity={0.8}
       disabled={disabled}
     >
-      <Text style={styles.continueButtonText}>
-        {text}
-      </Text>
+      <Text style={styles.buttonText}>{text}</Text>
     </TouchableOpacity>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  continueButton: {
-    width: '100%',
-    height: 56,
-    borderRadius: 16,
+  button: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: BORDER_RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
-    ...SHADOWS.lg,
+    width: '100%',
+    marginTop: SPACING.lg,
   },
-  continueButtonActive: {
-    backgroundColor: COLORS.primary,
-  },
-  continueButtonDisabled: {
-    backgroundColor: COLORS.input.background,
-  },
-  continueButtonText: {
+  buttonText: {
     color: COLORS.white,
     fontSize: 16,
-    fontWeight: '600',
-    letterSpacing: 0.3,
+    fontWeight: 'bold',
   },
-}); 
+  disabledButton: {
+    backgroundColor: COLORS.disabled,
+  },
+});
+
+export default ContinueButton; 

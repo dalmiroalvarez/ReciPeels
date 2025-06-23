@@ -1,25 +1,38 @@
+import { useNavigation } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 
-export default function BackButton({ onPress, style }) {
+const BackButton = () => {
+  const navigation = useNavigation();
+
+  const handlePress = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  };
+
   return (
-    <TouchableOpacity style={[styles.backButton, style]} onPress={onPress}>
-      <Text style={styles.backButtonText}>←</Text>
+    <TouchableOpacity onPress={handlePress} style={styles.button} activeOpacity={0.7}>
+      <Text style={styles.arrow}>←</Text>
     </TouchableOpacity>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  backButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  button: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: -8,
+    marginRight: 8,
   },
-  backButtonText: {
+  arrow: {
     fontSize: 24,
     color: '#000000',
     fontWeight: '400',
   },
-}); 
+});
+
+export default BackButton; 
